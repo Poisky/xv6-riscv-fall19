@@ -39,9 +39,11 @@ void
 freerange(void *pa_start, void *pa_end)
 {
   char *p;
+  push_off();//kfree函数中将用到cpuid()函数,使用push_off()关闭中断
   p = (char*)PGROUNDUP((uint64)pa_start);
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
     kfree(p);
+  pop_off();
 }
 
 // Free the page of physical memory pointed at by v,
@@ -52,7 +54,6 @@ void
 kfree(void *pa)
 {
   struct run *r;
-  push_off();
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
@@ -65,7 +66,6 @@ kfree(void *pa)
   r->next = kmems[i].freelist;
   kmems[i].freelist = r;
   release(&kmems[i].lock);
-  pop_off();
 }
 
 
@@ -84,8 +84,7 @@ kalloc(void)
     kmems[i].freelist = r->next;
     release(&kmems[i].lock);
   }
-  else
-  {
+  else{
     release(&kmems[i].lock);
     for(int j = 0;j<NCPU;j++){
       acquire(&kmems[j].lock);
@@ -103,4 +102,3 @@ kalloc(void)
   pop_off();
   return (void*)r;
 }
-
