@@ -39,7 +39,7 @@ void
 freerange(void *pa_start, void *pa_end)
 {
   char *p;
-  push_off();//kfree函数中将用到cpuid()函数,使用push_off()关闭中断
+  push_off();//kfree(p)中将用到cpuid()函数,使用push_off()关闭中断
   p = (char*)PGROUNDUP((uint64)pa_start);
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
     kfree(p);
